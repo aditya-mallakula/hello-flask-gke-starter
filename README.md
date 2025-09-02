@@ -61,3 +61,4 @@ helm uninstall hello
 helm uninstall mon -n monitoring || true
 cd terraform && terraform destroy -auto-approve -var 'project_id=YOUR_PROJECT_ID'
 ```
+# trigger
