@@ -1,0 +1,23 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.tfstate
+
+# Keep the lock file (recommended)
+#! .terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+
+# Node/other common
+node_modules/
+dist/
+build/
+.env
