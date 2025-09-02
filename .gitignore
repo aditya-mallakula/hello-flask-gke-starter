@@ -8,15 +8,14 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 .terraform.tfstate
-
-# Keep the lock file (recommended)
+# keep lock file tracked
 #! .terraform.lock.hcl
 
 # Python
 __pycache__/
 *.pyc
 
-# Node/other common
+# Common
 node_modules/
 dist/
 build/
