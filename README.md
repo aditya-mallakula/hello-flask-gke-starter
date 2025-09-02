@@ -65,3 +65,4 @@ cd terraform && terraform destroy -auto-approve -var 'project_id=YOUR_PROJECT_ID
 # trigger CI
 # trigger deploy
 # trigger AR push
+# trigger deploy
