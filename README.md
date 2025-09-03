@@ -17,7 +17,7 @@ End-to-end learning project: Flask API → Docker → **Artifact Registry** → 
 ```bash
 cd terraform
 terraform init
-terraform apply -auto-approve -var 'project_id=YOUR_PROJECT_ID' -var 'region=us-central1' -var 'zone=us-central1-a'
+terraform apply -auto-approve -var 'project_id=my-gcp-sandbox-123' -var 'region=us-central1' -var 'zone=us-central1-a'
 gcloud container clusters get-credentials hello-gke --zone us-central1-a --project YOUR_PROJECT_ID
 kubectl get nodes
 ```

@@ -18,11 +18,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Show GitHub context (debug)
+        run: |
+          echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+          echo "GITHUB_REF=$GITHUB_REF"
+
       - name: Authenticate to Google Cloud (WIF)
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Debug who am I
+        run: |
+          gcloud auth list
+          gcloud config list
+          gcloud artifacts repositories list --location=us-central1 --project=$PROJECT_ID
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev -q
@@ -32,12 +48,35 @@ jobs:
           TAG=${GITHUB_SHA::7}
           REPO="$REGION-docker.pkg.dev/$PROJECT_ID/hello-repo"
           IMAGE="$REPO/$IMAGE_NAME:$TAG"
-          docker build -t $IMAGE .
-          docker push $IMAGE
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          # also push a moving dev tag
+          docker tag "$IMAGE" "$REPO/$IMAGE_NAME:dev"
+          docker push "$REPO/$IMAGE_NAME:dev"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Helm Lint & Template
+
+      # If kubectl is missing on runner, uncomment:
+      # - name: Install kubectl (if missing)
+      #   run: |
+      #     if ! command -v kubectl >/dev/null 2>&1; then
+      #       sudo apt-get update && sudo apt-get install -y kubectl
+      #     fi
+
+      - name: Get kubecontext
+        run: gcloud container clusters get-credentials hello-gke --zone us-central1-a --project $PROJECT_ID
+
+      # Option A: kubectl rollout
+      - name: Rollout new image
         run: |
-          helm lint helm/hello
-          helm template hello helm/hello             --set image.repository=$(echo $IMAGE | sed 's/:.*//')             --set image.tag=$TAG >/dev/null
+          kubectl set image deployment/hello-flask app="$IMAGE" --record
+          kubectl rollout status deployment/hello-flask --timeout=5m
+
+      # Option B: Helm deploy (upgrade/install)
+      # - name: Helm upgrade
+      #   run: |
+      #     helm upgrade --install hello helm/hello \
+      #       --set image.repository=$(echo $IMAGE | sed 's/:.*//') \
+      #       --set image.tag=$TAG \
+      #       --namespace default
